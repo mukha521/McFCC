@@ -8,6 +8,8 @@
 // Pin 4 - Rear lights LED strip data wire
 // Pin 9  - Channel 1 PWM
 // Pin 10 - Channel 2 PWM
+// Pin A0 - Battery voltage (via 1/12 voltage divider)
+// Pin RXI - SBUS input (UART)
 
 // Channel 1 - Steering
 // Channel 2 - Gas / Brake
@@ -42,6 +44,8 @@ uint8_t ctrlEffects = 0;              // Effect LED strip control byte
 boolean attentionLights = false;      // Attention head lights
 uint8_t battLevel = 0;                // Battery voltage warnings. 0 - good; 1 - low; 2 - critical;
 // =========================
+
+
 //#define cmRG  3
 #define cmDIR 2
 #define cmBRK 1
@@ -60,6 +64,9 @@ void mixEffects(void);
 
 
 void setup() {
+
+  // Selecting internal 1.1v reference for measuring battery voltage
+  analogReference(INTERNAL);
   
   // Lights setup
   pinMode(PIN_HEADLIGHTS, OUTPUT);
@@ -89,19 +96,21 @@ void setup() {
   sbus.begin();
 }
 
-// === Global variables ===
-int signal;             // Processing commands from reciever
-uint8_t effectTaps = 0; // Ticks for effects;
-uint8_t effectSub = 0;  // Subcounter fpr effect taps;
-boolean effectBool = false; // Boolean var for effects (left/right etc.)
-int     effectInt = 0;  // Integer for effecsts
-uint8_t ticks = 0;      // ticks every 100ms, resets every 500ms;
-boolean tickFlop;       // inverts every 500ms;
-boolean warnFlop;       // inverts every 200ms;
-boolean critFlop;       // inverts every 100ms;
-uint32_t col;           // Temp colors;
-uint8_t hCol;           // Temp hue position;
-// ========================
+// ======= Globals =======
+int signal;                                 // Processing commands from reciever
+uint8_t effectTaps = 0;                     // Ticks for effects;
+uint8_t effectSub = 0;                      // Subcounter fpr effect taps;
+boolean effectBool = false;                 // Boolean var for effects (left/right etc.)
+int     effectInt = 0;                      // Integer for effecsts
+uint8_t ticks = 0;                          // ticks every 100ms, resets every 500ms;
+boolean tickFlop;                           // inverts every 500ms;
+boolean warnFlop;                           // inverts every 200ms;
+boolean critFlop;                           // inverts every 100ms;
+uint32_t col;                               // Temp colors;
+uint8_t hCol;                               // Temp hue position;
+const float voltageScale = (13.2 / 1023.0);  // Scale for calculating battery voltage
+float battVoltage = 0.0;                    // Calculated battery voltage
+// =======================
 
 
 void loop() {
@@ -182,6 +191,22 @@ void loop() {
   }
   
   //Checking the battery
+  battVoltage = analogRead(A0) * voltageScale;
+  if (battVoltage >= 6.0 and battVoltage <= 8.5) {
+    // 2S LiPo
+    if (battVoltage <= 6.6) {
+      battLevel = 2; //Critical
+    } else if (battVoltage <= 7.0) {
+      battLevel = 1; //Low
+    } else battLevel = 0; //Good
+  } else if (battVoltage >= 9.0 and battVoltage <= 12.8) {
+    // 3S LiPo
+    if (battVoltage <= 9.9) {
+      battLevel = 2; //Critical
+    } else if (battVoltage <= 10.5) {
+      battLevel = 1; //Low
+    } else battLevel = 0; //Good
+  } else battLevel = 2; //Battery critical status as we can't get right voltage
 
   // Lights testing area
   //attentionLights = true;
@@ -276,8 +301,8 @@ void mixLights() {
 }
 
 
-const uint8_t pulseDelta = 32; // Brightness increment in effects
-int deltaInc = 3;              // Delta for incrementing delta
+const uint8_t pulseDelta = 32;            // Brightness increment in effects
+int deltaInc = 3;                         // Delta for incrementing delta
 const uint8_t rwSub[5] = {4, 2, 1, 2, 4}; // Subcounters for each position of the "eye" for "Road warrior" effect
 void mixEffects() {
   // Lights off
