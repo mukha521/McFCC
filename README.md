@@ -13,6 +13,7 @@ After some web-searching, I found some projects like "sbus to 16pwm" and led con
 * SBUS input from receiver
 * 2 PWM outputs for servo and ESC
 * LED strips as lights and effects
+* VBAT monitoring (2S or 3S supported)
 
 ## Hardware used
 I had some leftovers from projects I did earlier...
