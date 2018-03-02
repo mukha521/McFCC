@@ -10,9 +10,9 @@ My interest in RC car grew after I've started flying 5-inch race/freestyle quadc
 After some web-searching, I found some projects like "sbus to 16pwm" and led controllers that takes pwm signals as an input. Well, I didn't want to make several devices with lots of wires to put into a car. As I have some small experience in avr controllers, I came up with the idea to make controller myself that will meet my needs. Having SBUS, we aren't limited by 3 or 4 channels, there arw 16 of them, we even could use of telemetry (I think I'll implement it). Also, there is a room for some other things to turn on and off as we have a lot of arduino pins free...
 
 ## Key features
-SBUS input from receiver
-2 PWM outputs for servo and ESC
-LED strips as lights and effects
+* SBUS input from receiver
+* 2 PWM outputs for servo and ESC
+* LED strips as lights and effects
 
 ## Hardware used
 I had some leftovers from projects I did earlier...
