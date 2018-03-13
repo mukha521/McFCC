@@ -117,13 +117,13 @@ void loop() {
 
 
   //Are we armed?
-  armed = (sbus.getChannel(8) > 500) ? true : false;
+  armed = (sbus.getChannel(8)/2 > 500) ? true : false;
   
   //Failsafe active?
   failsafe = (sbus.getFailsafeStatus() == SBUS_FAILSAFE_ACTIVE) ? true : false;
   
   //Movement control bits update
-  signal = sbus.getChannel(2) - CENTER_GAS;
+  signal = sbus.getChannel(2)/2 - CENTER_GAS;
   if (abs(signal) <= STOP_DELTA) {
     // Slowing / neutral
     bitSet(ctrlMovement, cmBRK); //Braking
@@ -152,10 +152,10 @@ void loop() {
   }
 
   //Basic lights controls
-  signal = sbus.getChannel(4);
+  signal = sbus.getChannel(4)/2;
   attentionLights = (signal > 500) ? true : false;
 
-  signal = sbus.getChannel(3);
+  signal = sbus.getChannel(3)/2;
   if (signal < 333) {
     ctrlLights = 0;
   } else if ((signal >= 333) and (signal <= 666)) {
@@ -167,11 +167,13 @@ void loop() {
   //Blinkers controls
   if (!armed or failsafe) {
     ctrlBlinkers = 3;
+  } else {
+    ctrlBlinkers = 0;
   } //Here will be some clever logic for turn indicators
 
   
   //Effect selector
-  signal = sbus.getChannel(5);
+  signal = sbus.getChannel(5)/2;
   if (signal < 125) {
     ctrlEffects = 0;
   } else if ((signal > 125) and (signal <= 250)) {
@@ -210,12 +212,12 @@ void loop() {
 
   // Lights testing area
   //attentionLights = true;
-  armed = true;
-  failsafe = false;
-  ctrlLights = 0;
-  ctrlBlinkers = 0;
-  //battLevel = 1;
-  ctrlEffects = 6;
+  //armed = true;
+  //failsafe = false;
+  //ctrlLights = 0;
+  //ctrlBlinkers = 0;
+  //battLevel = 0;
+  //ctrlEffects = 6;
   
   //Mixing lights
   mixLights();
@@ -419,8 +421,8 @@ void mixEffects() {
 ISR(TIMER1_OVF_vect) {
  // Updating values for ch1 and ch2 PWMs
  if (armed and !failsafe) {
-   OCR1A = 1000 + sbus.getChannel(1);
-   OCR1B = 1000 + sbus.getChannel(2);  
+   OCR1A = 1000 + sbus.getChannel(1)/2;
+   OCR1B = 1000 + sbus.getChannel(2)/2;  
  } else {
    OCR1A = DEFAULT_CH1;
    OCR1B = DEFAULT_CH2;
